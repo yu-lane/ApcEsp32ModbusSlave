@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include "esp_err.h"
 #include "mbcontroller.h"       // for mbcontroller defines and api
-#include "modbus_params.h"      // for modbus parameters structures
 #include "esp_log.h"            // for log_write
 #include "sdkconfig.h"
 
@@ -22,27 +21,26 @@
 // Defines below are used to define register start address for each type of Modbus registers
 #define HOLD_OFFSET(field) ((uint16_t)(offsetof(holding_reg_params_t, field) >> 1))
 #define INPUT_OFFSET(field) ((uint16_t)(offsetof(input_reg_params_t, field) >> 1))
-#define MB_REG_DISCRETE_INPUT_START         (0x0000)
-#define MB_REG_COILS_START                  (0x0000)
-#define MB_REG_INPUT_START_AREA0            (INPUT_OFFSET(input_data0)) // register offset input area 0
-#define MB_REG_INPUT_START_AREA1            (INPUT_OFFSET(input_data4)) // register offset input area 1
-#define MB_REG_HOLDING_START_AREA0          (HOLD_OFFSET(holding_data0))
-#define MB_REG_HOLDING_START_AREA1          (HOLD_OFFSET(holding_data4))
+
 
 #define MB_PAR_INFO_GET_TOUT                (10) // Timeout for get parameter info
-#define MB_CHAN_DATA_MAX_VAL                (6)
-#define MB_CHAN_DATA_OFFSET                 (0.2f)
+
+// #define MB_CHAN_DATA_MAX_VAL                (6)
+// #define MB_CHAN_DATA_OFFSET                 (0.2f)
+
 #define MB_READ_MASK                        (MB_EVENT_INPUT_REG_RD \
                                                 | MB_EVENT_HOLDING_REG_RD \
                                                 | MB_EVENT_DISCRETE_RD \
                                                 | MB_EVENT_COILS_RD)
+
 #define MB_WRITE_MASK                       (MB_EVENT_HOLDING_REG_WR \
                                                 | MB_EVENT_COILS_WR)
+
 #define MB_READ_WRITE_MASK                  (MB_READ_MASK | MB_WRITE_MASK)
 
 static const char *TAG = "SLAVE_TEST";
 
-static portMUX_TYPE param_lock = portMUX_INITIALIZER_UNLOCKED;
+// static portMUX_TYPE param_lock = portMUX_INITIALIZER_UNLOCKED;
 
 #pragma pack(push, 1)
 typedef struct
@@ -126,7 +124,7 @@ void app_main(void)
 
     // The cycle below will be terminated when parameter holdingRegParams.dataChan0
     // incremented each access cycle reaches the CHAN_DATA_MAX_VAL value.
-    for(;holding_reg_params.holding_data0 < MB_CHAN_DATA_MAX_VAL;) {
+    while(apc_holding_reg.test_regs[0]!=100) {
         // Check for read/write events of Modbus master for certain events
         mb_event_group_t event = mbc_slave_check_event(MB_READ_WRITE_MASK);
         const char* rw_str = (event & MB_READ_MASK) ? "READ" : "WRITE";
@@ -142,41 +140,15 @@ void app_main(void)
                     (uint32_t)reg_info.type,
                     (uint32_t)reg_info.address,
                     (uint32_t)reg_info.size);
-            if (reg_info.address == (uint8_t*)&holding_reg_params.holding_data0)
-            {
-                portENTER_CRITICAL(&param_lock);
-                holding_reg_params.holding_data0 += MB_CHAN_DATA_OFFSET;
-                if (holding_reg_params.holding_data0 >= (MB_CHAN_DATA_MAX_VAL - MB_CHAN_DATA_OFFSET)) {
-                    coil_reg_params.coils_port1 = 0xFF;
-                }
-                portEXIT_CRITICAL(&param_lock);
-            }
-        } else if (event & MB_EVENT_INPUT_REG_RD) {
-            ESP_ERROR_CHECK(mbc_slave_get_param_info(&reg_info, MB_PAR_INFO_GET_TOUT));
-            ESP_LOGI(TAG, "INPUT READ (%u us), ADDR:%u, TYPE:%u, INST_ADDR:0x%.4x, SIZE:%u",
-                    (uint32_t)reg_info.time_stamp,
-                    (uint32_t)reg_info.mb_offset,
-                    (uint32_t)reg_info.type,
-                    (uint32_t)reg_info.address,
-                    (uint32_t)reg_info.size);
-        } else if (event & MB_EVENT_DISCRETE_RD) {
-            ESP_ERROR_CHECK(mbc_slave_get_param_info(&reg_info, MB_PAR_INFO_GET_TOUT));
-            ESP_LOGI(TAG, "DISCRETE READ (%u us): ADDR:%u, TYPE:%u, INST_ADDR:0x%.4x, SIZE:%u",
-                                (uint32_t)reg_info.time_stamp,
-                                (uint32_t)reg_info.mb_offset,
-                                (uint32_t)reg_info.type,
-                                (uint32_t)reg_info.address,
-                                (uint32_t)reg_info.size);
-        } else if (event & (MB_EVENT_COILS_RD | MB_EVENT_COILS_WR)) {
-            ESP_ERROR_CHECK(mbc_slave_get_param_info(&reg_info, MB_PAR_INFO_GET_TOUT));
-            ESP_LOGI(TAG, "COILS %s (%u us), ADDR:%u, TYPE:%u, INST_ADDR:0x%.4x, SIZE:%u",
-                                rw_str,
-                                (uint32_t)reg_info.time_stamp,
-                                (uint32_t)reg_info.mb_offset,
-                                (uint32_t)reg_info.type,
-                                (uint32_t)reg_info.address,
-                                (uint32_t)reg_info.size);
-            if (coil_reg_params.coils_port1 == 0xFF) break;
+            // if (reg_info.address == (uint8_t*)&holding_reg_params.holding_data0)
+            // {
+            //     portENTER_CRITICAL(&param_lock);
+            //     holding_reg_params.holding_data0 += MB_CHAN_DATA_OFFSET;
+            //     if (holding_reg_params.holding_data0 >= (MB_CHAN_DATA_MAX_VAL - MB_CHAN_DATA_OFFSET)) {
+            //         coil_reg_params.coils_port1 = 0xFF;
+            //     }
+            //     portEXIT_CRITICAL(&param_lock);
+            // }
         }
     }
     // Destroy of Modbus controller on alarm
