@@ -3,8 +3,8 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := modbus_slave
+PROJECT_NAME := ApcEsp32ModbusSlave
 
-EXTRA_COMPONENT_DIRS := $(IDF_PATH)/examples/protocols/modbus/mb_example_common
+EXTRA_COMPONENT_DIRS := $(IDF_PATH)/components/freemodbus
 
 include $(IDF_PATH)/make/project.mk

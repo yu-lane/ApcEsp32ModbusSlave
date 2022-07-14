@@ -6,4 +6,4 @@ set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/components/freemodbus)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
-project(modbus_slave)
+project(ApcEsp32ModbusSlave)

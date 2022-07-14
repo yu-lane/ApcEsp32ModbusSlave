@@ -1,4 +1,4 @@
-set(PROJECT_NAME "modbus_slave")
+set(PROJECT_NAME "ApcEsp32ModbusSlave")
 
 idf_component_register(SRCS "slave.c"
                     INCLUDE_DIRS ".")
