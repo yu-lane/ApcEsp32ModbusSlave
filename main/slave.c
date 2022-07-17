@@ -11,6 +11,9 @@
 #include "esp_log.h"            // for log_write
 #include "sdkconfig.h"
 
+#include "apc_modbus_regs.h"
+
+
 #define MB_PORT_NUM     (CONFIG_MB_UART_PORT_NUM)   // Number of UART port used for Modbus connection
 #define MB_SLAVE_ADDR   (CONFIG_MB_SLAVE_ADDR)      // The address of device in Modbus network
 #define MB_DEV_SPEED    (CONFIG_MB_UART_BAUD_RATE)  // The communication speed of the UART
@@ -71,7 +74,7 @@ void app_main(void)
     mb_register_area_descriptor_t reg_area; // Modbus register area descriptor structure
 
     // Set UART log level
-    esp_log_level_set(TAG, ESP_LOG_INFO);
+    esp_log_level_set(TAG, ESP_LOG_DEBUG);
     void* mbc_slave_handler = NULL;
 
     ESP_ERROR_CHECK(mbc_slave_init(MB_PORT_SERIAL_SLAVE, &mbc_slave_handler)); // Initialization of Modbus controller
@@ -88,18 +91,44 @@ void app_main(void)
     comm_info.parity = MB_PARITY_NONE;
     ESP_ERROR_CHECK(mbc_slave_setup((void*)&comm_info));
 
-    
+    ApcModbusReg_ProtocolVerifyInit();
     // The code below initializes Modbus register area descriptors
     // for Modbus Holding Registers, Input Registers, Coils and Discrete Inputs
     // Initialization should be done for each supported Modbus register area according to register map.
     // When external master trying to access the register in the area that is not initialized
     // by mbc_slave_set_descriptor() API call then Modbus stack
     // will send exception response for this register area.
-    reg_area.type = MB_PARAM_HOLDING; // Set type of register area
-    reg_area.start_offset = 0; // Offset of register area in Modbus protocol
-    reg_area.address = (void*)&apc_holding_reg.test_regs[0]; // Set pointer to storage instance
-    // Set the size of register storage instance = 150 holding registers
-    reg_area.size = 50;
+
+    APcModbusGetRegDescriptor(STATUS_DATA, &reg_area);
+    ESP_ERROR_CHECK(mbc_slave_set_descriptor(reg_area));
+    ESP_LOGI(TAG, "Modbus reg type:%d", reg_area.type);
+    ESP_LOGI(TAG, "Modbus reg start:%d", reg_area.start_offset);
+    ESP_LOGI(TAG, "Modbus reg address: %08x", (uint32_t)reg_area.address);
+    ESP_LOGI(TAG, "Modbus reg size:%d", reg_area.size);
+
+
+    APcModbusGetRegDescriptor(DYNAMIC_DATA, &reg_area);
+    ESP_ERROR_CHECK(mbc_slave_set_descriptor(reg_area));
+    ESP_LOGI(TAG, "Modbus reg type:%d", reg_area.type);
+    ESP_LOGI(TAG, "Modbus reg start:%d", reg_area.start_offset);
+    ESP_LOGI(TAG, "Modbus reg address: %08x", (uint32_t)reg_area.address);
+    ESP_LOGI(TAG, "Modbus reg size:%d", reg_area.size);
+
+    APcModbusGetRegDescriptor(STATIC_DATA, &reg_area);
+    ESP_ERROR_CHECK(mbc_slave_set_descriptor(reg_area));
+    ESP_LOGI(TAG, "Modbus reg type:%d", reg_area.type);
+    ESP_LOGI(TAG, "Modbus reg start:%d", reg_area.start_offset);
+    ESP_LOGI(TAG, "Modbus reg address: %08x", (uint32_t)reg_area.address);
+    ESP_LOGI(TAG, "Modbus reg size:%d", reg_area.size);
+
+    APcModbusGetRegDescriptor(COMMANDS, &reg_area);
+    ESP_ERROR_CHECK(mbc_slave_set_descriptor(reg_area));
+    ESP_LOGI(TAG, "Modbus reg type:%d", reg_area.type);
+    ESP_LOGI(TAG, "Modbus reg start:%d", reg_area.start_offset);
+    ESP_LOGI(TAG, "Modbus reg address: %08x", (uint32_t)reg_area.address);
+    ESP_LOGI(TAG, "Modbus reg size:%d", reg_area.size);
+
+    APcModbusGetRegDescriptor(PROTOCOL_VERIFY, &reg_area);
     ESP_ERROR_CHECK(mbc_slave_set_descriptor(reg_area));
     ESP_LOGI(TAG, "Modbus reg type:%d", reg_area.type);
     ESP_LOGI(TAG, "Modbus reg start:%d", reg_area.start_offset);
