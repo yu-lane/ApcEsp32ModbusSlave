@@ -82,6 +82,8 @@ typedef struct ApcModbusRegInventory
     Manufacturing Date. User Configuration 
     strings will be in this region as well. 
     */
+    uint16_t _Reserve01[2];                    //512,513
+    uint32_t _Reserve4B;                       //514
     char FWVersion_STR[16];                    //516
     char _Reserve_STR[16];                     //524
     char Model_STR[32];                        //532
@@ -97,7 +99,12 @@ typedef struct ApcModbusRegInventory
     uint16_t _Reserve[2];                      //593,594
     uint16_t Battery_DateSetting;              //595
     char Name_STR[16];                         //596
-
+    char MogName_STR[16];                      //604
+    char SOG0Name_STR[16];                     //612
+    char SOG1Name_STR[16];                     //620
+    char SOG2Name_STR[16];                     //628
+    char SOG3Name_STR[16];                     //636
+    uint32_t VoltageACSetting_BF;              //644
 }ApcModbusRegInventory_t;
 
 
@@ -109,22 +116,31 @@ typedef struct ApcModbusRegStatic
     information, and configuration data that 
     does not change frequently.
     */
-    uint16_t MOG_TurnOffCountdownSetting_EN;
-    uint16_t MOG_TurnOnCountdownSetting_EN;
-    uint32_t MOG_StayOffCountdownSetting_4B;
-    uint16_t SOG0_TurnOffCountdownSetting_EN;
-    uint16_t SOG0_TurnOnCountdownSetting_EN;
-    uint32_t SOG0_StayOffCountdownSetting_4B;
-    uint16_t SOG1_TurnOffCountdownSetting_EN;
-    uint16_t SOG1_TurnOnCountdownSetting_EN;
-    uint32_t SOG1_StayOffCountdownSetting_4B;
-    uint16_t SOG2_TurnOffCountdownSetting_EN;
-    uint16_t SOG2_TurnOnCountdownSetting_EN;
-    uint32_t SOG2_StayOffCountdownSetting_4B;
-    uint16_t SOG3_TurnOffCountdownSetting_EN;
-    uint16_t SOG3_TurnOnCountdownSetting_EN;
-    uint32_t SOG3_StayOffCountdownSetting_4B;
-
+    uint16_t BatteryTestIntervalSetting_BF_Lookup;      //1024
+    uint16_t PowerQualitySetting_BF;                    //1025
+    uint16_t Output_UpperAcceptableVoltageSetting;      //1026
+    uint16_t Output_LowerAcceptableVoltageSetting;      //1027
+    uint16_t Output_SensitivitySetting_BF;              //1028
+    uint16_t MOG_TurnOffCountdownSetting_EN;            //1029
+    uint16_t MOG_TurnOnCountdownSetting_EN;             //1030
+    uint32_t MOG_StayOffCountdownSetting_4B;            //1031
+    uint16_t MOG_MinimumReturnRuntimeSetting;           //1033
+    uint16_t SOG0_TurnOffCountdownSetting_EN;           //1034
+    uint16_t SOG0_TurnOnCountdownSetting_EN;            //1035
+    uint32_t SOG0_StayOffCountdownSetting_4B;           //1036
+    uint16_t SOG0_MinimumReturnRuntimeSetting;           //1038
+    uint16_t SOG1_TurnOffCountdownSetting_EN;           //1039
+    uint16_t SOG1_TurnOnCountdownSetting_EN;            //1040
+    uint32_t SOG1_StayOffCountdownSetting_4B;           //1041
+    uint16_t SOG1_MinimumReturnRuntimeSetting;           //1043
+    uint16_t SOG2_TurnOffCountdownSetting_EN;           //1044
+    uint16_t SOG2_TurnOnCountdownSetting_EN;            //1045
+    uint32_t SOG2_StayOffCountdownSetting_4B;           //1046
+    uint16_t SOG2_MinimumReturnRuntimeSetting;           //1047
+    uint16_t SOG3_TurnOffCountdownSetting_EN;           //1049
+    uint16_t SOG3_TurnOnCountdownSetting_EN;            //1050
+    uint32_t SOG3_StayOffCountdownSetting_4B;           //1051
+    uint16_t SOG3_MinimumReturnRuntimeSetting;           //1053
 }ApcModbusRegStatic_t;
 
 typedef struct ApcModbusRegCommands
@@ -212,7 +228,7 @@ void APcModbusGetRegDescriptor(APcDataTypeAndOffset_t type, mb_register_area_des
     switch (type)
     {
     case STATUS_DATA:
-        pDescriptor->type = MB_PARAM_HOLDING;
+        pDescriptor->type = MB_PARAM_INPUT;
         pDescriptor->start_offset = STATUS_DATA;
         pDescriptor->address = &apcModbusRegStatus;
         pDescriptor->size = sizeof(apcModbusRegStatus);
@@ -242,7 +258,7 @@ void APcModbusGetRegDescriptor(APcDataTypeAndOffset_t type, mb_register_area_des
         pDescriptor->size = sizeof(apcModbusRegCommands);
         break;
     case PROTOCOL_VERIFY:
-        pDescriptor->type = MB_PARAM_HOLDING;
+        pDescriptor->type = MB_PARAM_INPUT;
         pDescriptor->start_offset = PROTOCOL_VERIFY;
         pDescriptor->address = &apcModbusRegProtocolVerify;
         pDescriptor->size = sizeof(apcModbusRegProtocolVerify);
